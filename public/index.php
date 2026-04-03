@@ -12,4 +12,7 @@ require_once '../app/models/User.php';
 
 require_once '../routes/web.php';
 
+require_once '../app/controllers/DashboardController.php';
+
+
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);

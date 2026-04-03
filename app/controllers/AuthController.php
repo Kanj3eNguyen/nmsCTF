@@ -49,7 +49,7 @@ class AuthController extends Controller
         $_SESSION['user_name'] = $user['username'];
         $_SESSION['success'] = 'Dang nhap thanh cong.';
 
-        $this->redirect($this->url('/Dashboard'));
+        $this->redirect($this->url('/dashboard'));
     }
 
     public function signup(): void
