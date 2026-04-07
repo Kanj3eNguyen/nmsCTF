@@ -1,0 +1,31 @@
+# IDE / Editor folders
+/.vscode/
+/.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Composer configuration
+/vendor/
+composer.phar
+
+# Environment environment variables file (very important)
+.env
+.env.backup
+.env.local
+
+# Logs and databases
+/error_log
+*.log
+*.sqlite
+*.db
+
+# macOS / Windows OS generated files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
