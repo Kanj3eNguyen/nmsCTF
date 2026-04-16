@@ -43,7 +43,11 @@ class AuthController extends Controller
             $_SESSION['error'] = 'Thong tin dang nhap khong dung.';
             $this->redirect($this->url('/login'));
         }
-
+        if($user || password_verify($password, $user['password'])){
+            if((isset($user['is_2fa_enabled'])) && $user['is_2fa_enabled'] == 1){
+                
+            }
+        }
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['username'];
@@ -113,6 +117,8 @@ class AuthController extends Controller
     public function forgotPassword(): void
     {
         $email = trim($_POST['email'] ?? '');
+        $action = $_POST['action'] ?? 'send_otp';
+        $otpInput = trim($_POST['otp'] ?? '');
 
         if ($email === '') {
             $_SESSION['error'] = 'Vui long nhap email.';
@@ -125,18 +131,39 @@ class AuthController extends Controller
         }
 
         $userModel = new User();
-        $user = $userModel->findByEmail($email);
+        $check = $userModel->findByEmail($email);
 
-        if($user){
-        $token = bin2hex(random_bytes(16));
-        $expiresAt = strtotime('+15 minutes');
-        $ctoken= $userModel->createToken($email, $token, $expiresAt);
-        $resetLink= $this->url('/reset-password?token=' . $token);
-        $sendMail= MailService::sendOtpEmail($email, $resetLink);
+        if ($action === 'verify_otp') {
+            if ($otpInput === '') {
+                $_SESSION['error'] = 'Vui long nhap ma OTP.';
+                $this->redirect($this->url('/forgot-password'));
+            }
+
+            if ($userModel->verifyOtp($email, $otpInput)) {
+                // Xác thực thành công -> MỞ SESSION CHO PHÉP ĐỔI MẬT KHẨU
+                $_SESSION['reset_email'] = $email;
+                $_SESSION['success'] = 'Xac thuc thanh cong. Vui long dat lai mat khau.';
+                $this->redirect($this->url('/reset-password')); // Cần trỏ tới route của UserController
+            } else {
+                $_SESSION['error'] = 'Ma OTP khong dung hoac da het han.';
+                $this->redirect($this->url('/forgot-password'));
+            }
         }
-        $_SESSION['success'] = 'Neu email ton tai, mot link reset mat khau se duoc gui den email cua ban.';
-        $this->redirect($this->url('/forgot-password'));
+
+        // Logic send_otp
+        if($check){
+            $forgotname = $check['username'];
+            
+            // Create an OTP separately
+            $otp = sprintf("%06d", mt_rand(1, 999999));
+            $expiresAt = strtotime('+15 minutes');
+            $userModel->createOtp($email, $otp, $expiresAt);
+            
+            $sendMail= MailService::sendOtpEmail($email, $otp, $forgotname);
+        }
         
+        $_SESSION['success'] = 'Neu email ton tai, mot ma OTP se duoc gui den email cua ban.';
+        $this->redirect($this->url('/forgot-password'));
     }
     public function logout(): void
     {

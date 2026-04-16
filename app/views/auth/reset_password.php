@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
     <?php
@@ -11,7 +10,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forgot Password - nmsCTF</title>
+    <title>Reset Password - nmsCTF</title>
     <link rel="stylesheet" href="<?= htmlspecialchars($basePath . '/assets/css/auth.css', ENT_QUOTES, 'UTF-8') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,7 +27,7 @@
                     <span class="logo-icon">🚩</span>
                     <span class="logo-text">nms<span class="highlight">CTF</span></span>
                 </div>
-                <p class="tagline">Reset your password</p>
+                <p class="tagline">Set A New Password</p>
             </div>
             
             <?php if (!empty($error)): ?>
@@ -43,65 +42,53 @@
                 </script>
             <?php endif; ?>
 
-            <form class="login-form" id="forgotPasswordForm" method="POST" action="<?= htmlspecialchars($basePath . '/forgot-password', ENT_QUOTES, 'UTF-8') ?>">
+            <form class="login-form" method="POST" action="<?= htmlspecialchars($basePath . '/reset-password', ENT_QUOTES, 'UTF-8') ?>">
                 
                 <p style="color: #a0aec0; font-size: 14px; margin-bottom: 20px; text-align: center;">
-                    Enter your email address and we'll send you an OTP to reset your password.
+                    Please enter your new password to complete the reset process.
                 </p>
 
                 <div class="form-group">
-                    <label for="email">Email Address</label>
+                    <label for="password">New Password</label>
                     <div class="input-wrapper">
-                        <!-- Icon email tự thiết kế đồng bộ với form login -->
+                        <!-- Icon pass -->
                         <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                            <polyline points="22,6 12,13 2,6"></polyline>
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                         </svg>
                         <input 
-                            type="email" 
-                            id="email" 
-                            name="email" 
-                            placeholder="Enter your email"
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="Enter new password"
                             required
                         >
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="otp">OTP Code</label>
+                    <label for="confirm_password">Confirm Password</label>
                     <div class="input-wrapper">
                         <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                         </svg>
                         <input 
-                            type="text" 
-                            id="otp" 
-                            name="otp" 
-                            placeholder="Enter 6-digit OTP (if received)"
-                            maxlength="6"
+                            type="password" 
+                            id="confirm_password" 
+                            name="confirm_password" 
+                            placeholder="Confirm new password"
+                            required
                         >
                     </div>
                 </div>
 
-                <div class="form-options">
-                    <a href="<?= htmlspecialchars($basePath . '/login', ENT_QUOTES, 'UTF-8') ?>" class="forgot-link">← Back to Login</a>
-                </div>
-
-                <div style="display: flex; gap: 10px; margin-top: 15px;">
-                    <button type="submit" name="action" value="send_otp" class="submit-btn" style="flex: 1; background-color: #4a5568;">
-                        <span class="btn-text">Send OTP</span>
-                    </button>
-                    
-                    <button type="submit" name="action" value="verify_otp" class="submit-btn" style="flex: 1;">
-                        <span class="btn-text">Verify OTP</span>
-                    </button>
-                </div>
+                <button type="submit" class="submit-btn" style="margin-top: 15px;">
+                    <span class="btn-text">Update Password</span>
+                </button>
             </form>
         </div>
     </div>
     
 </body>
 </html>
-
-

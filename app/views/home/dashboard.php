@@ -164,7 +164,7 @@
         <div class="dashboard-card">
             <div class="welcome-icon">👋</div>
             <span class="greeting-emoji">✨</span>
-            <h1 class="greeting">Xin Chào, User!</h1>
+            <h1 class="greeting">Xin Chào, <?= htmlspecialchars($_SESSION['user_name'] ?? 'User', ENT_QUOTES, 'UTF-8') ?>!</h1>
             <p class="subtitle">
                 Chào mừng bạn đến với nmsCTF.<br>
                 Sẵn sàng để chinh phục những thử thách bảo mật?

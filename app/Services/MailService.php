@@ -6,7 +6,7 @@ use PHPMailer\PHPMailer\Exception;
 
 class MailService
 {
-    public static function sendOtpEmail($toEmail, $resetLink)
+    public static function sendOtpEmail($toEmail, $otp, $forgotname)
     {
         $mail = new PHPMailer(true);
         try {
@@ -23,7 +23,7 @@ class MailService
 
             $mail->isHTML(true);
             $mail->Subject = 'Reset password request';
-            $mail->Body    = "Bạn đã yêu cầu khôi phục mật khẩu. Vui lòng click vào link dưới đây để tiếp tục: <a href='{$resetLink}'>Khôi phục mật khẩu</a>. Link này sẽ hết hạn trong 30 phút.";
+            $mail->Body    = "Xin chào {$forgotname},<br><br>Bạn đã yêu cầu khôi phục mật khẩu. Vui lòng sử dụng mã OTP sau để tiếp tục: <strong>{$otp}</strong>. Mã này sẽ hết hạn trong 15 phút.";
 
             $mail->send();
             return true;

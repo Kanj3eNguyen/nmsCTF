@@ -3,6 +3,8 @@
 use App\Core\Router;
 use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
+use App\Controllers\UserController;
+use App\Models\User;
 
 $router = new Router();
 //login
@@ -14,8 +16,8 @@ $router->get('/forgot-password', [AuthController::class, 'showForgotPassword']);
 $router->post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
 //reset
-$router->get('/reset-password', [AuthController::class, 'showResetPassword']);
-$router->post('/reset-password', [AuthController::class, 'resetPassword']);
+$router->get('/reset-password', [UserController::class, 'showResetPassword']);
+$router->post('/reset-password', [UserController::class, 'resetPassword']);
 
 
 //signup
@@ -25,3 +27,7 @@ $router->post('/signup', [AuthController::class, 'signup']);
 $router->get('/logout', [AuthController::class, 'logout']);
 //dash
 $router->get('/dashboard', [DashboardController::class, 'showDashboard']);
+
+//profile
+$router->get('/profile', [UserController::class, 'showProfile']);
+$router->post('/profile/update', [UserController::class, 'updateProfile']);
