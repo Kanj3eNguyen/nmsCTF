@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\User;
-
+use App\Services\MailService;
 class UserController extends Controller
 {
     //resetpass
@@ -48,12 +48,9 @@ class UserController extends Controller
         $userModel = new User();
         $user = $userModel->findByEmail($email);
         
-        if ($user) {
-            // Cập nhật mật khẩu mới
+        if ($user) {            
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
             $userModel->updatePassword($email, $hashedPassword);
-            
-            // Xóa session reset và token cũ
             unset($_SESSION['reset_email']);
             $userModel->deleteOldTokens($email);
             
@@ -83,7 +80,49 @@ class UserController extends Controller
 
         unset($_SESSION['error'], $_SESSION['success']);
     }
+    public function changePassword(): void
+    {
+        if (!isset($_SESSION['user_id'])) {
+            $this->redirect($this->url('/login'));
+        }
 
+        $currentPassword = $_POST['current_password'] ?? '';
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+
+        if ($currentPassword === '' || $newPassword === '' || $confirmPassword === '') {
+            $_SESSION['error'] = 'Vui long nhap day du thong tin.';
+            $this->redirect($this->url('/profile'));
+        }
+
+        if ($newPassword !== $confirmPassword) {
+            $_SESSION['error'] = 'Mat khau moi va xac nhan mat khau khong khop.';
+            $this->redirect($this->url('/profile'));
+        }
+
+        $userModel = new User();
+        $user = $userModel->findById($_SESSION['user_id']);
+
+        if (!$user || !password_verify($currentPassword, $user['password'])) {
+            $_SESSION['error'] = 'Mat khau hien tai khong chinh xac.';
+            $this->redirect($this->url('/profile'));
+        }
+            $otp = sprintf("%06d", mt_rand(1, 999999));
+            $expiresAt = strtotime('+15 minutes');
+            $userModel->createOtp($user['email'], $otp, $expiresAt);
+            MailService::sendOtpEmail($user['email'], $otp, $user['username']);
+            $_SESSION['pending_password_change'] = true;
+            $_SESSION['success'] = 'Mot ma OTP da duoc gui den email cua ban cho xac thuc thay doi mat khau.';
+            
+        $hashedNewPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+        if ($userModel->updatePassword($user['email'], $hashedNewPassword)) {
+            $_SESSION['success'] = 'Doi mat khau thanh cong.';
+        } else {
+            $_SESSION['error'] = 'Co loi xay ra, vui long thu lai.';
+        }
+
+        $this->redirect($this->url('/profile'));
+    }
   
     public function updateProfile(): void
     {
@@ -92,6 +131,9 @@ class UserController extends Controller
         }
 
         $email = trim($_POST['email'] ?? '');
+        $fullName = trim($_POST['full_name'] ?? '');
+        $phone = trim($_POST['phone'] ?? '');
+        $is2faEnabled = isset($_POST['is_2fa_enabled']) ? 1 : 0;
         $userId = $_SESSION['user_id'];
 
         if ($email === '') {
@@ -113,7 +155,7 @@ class UserController extends Controller
             $this->redirect($this->url('/profile'));
         }
 
-        if ($userModel->updateProfile($userId, $email)) {
+        if ($userModel->updateProfile($userId, $email, $fullName, $phone, $is2faEnabled)) {
             $_SESSION['success'] = 'Cap nhat thong tin thanh cong.';
         } else {
             $_SESSION['error'] = 'Co loi xay ra, vui long thu lai.';

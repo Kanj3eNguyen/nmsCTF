@@ -100,11 +100,14 @@ class User extends Model
         return $user ?: null;
     }
 
-    public function updateProfile(int $id, string $email): bool
+    public function updateProfile(int $id, string $email, string $full_name, string $phone, int $is_2fa_enabled = 0): bool
     {
-        $stmt = $this->db->prepare('UPDATE users SET email = :email WHERE id = :id');
+        $stmt = $this->db->prepare('UPDATE users SET email = :email, full_name = :full_name, phone = :phone, is_2fa_enabled = :is_2fa_enabled WHERE id = :id');
         return $stmt->execute([
             'email' => $email,
+            'full_name' => $full_name,
+            'phone' => $phone,
+            'is_2fa_enabled' => $is_2fa_enabled,
             'id' => $id,
         ]);
     }

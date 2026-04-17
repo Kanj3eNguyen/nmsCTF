@@ -11,6 +11,11 @@ $router = new Router();
 $router->get('/', [AuthController::class, 'showLogin']);
 $router->get('/login', [AuthController::class, 'showLogin']);
 $router->post('/login', [AuthController::class, 'login']);
+
+//2FA login
+$router->get('/login/2fa', [AuthController::class, 'show2fa']);
+$router->post('/login/2fa', [AuthController::class, 'verify2fa']);
+
 //forgot
 $router->get('/forgot-password', [AuthController::class, 'showForgotPassword']);
 $router->post('/forgot-password', [AuthController::class, 'forgotPassword']);

@@ -43,17 +43,74 @@ class AuthController extends Controller
             $_SESSION['error'] = 'Thong tin dang nhap khong dung.';
             $this->redirect($this->url('/login'));
         }
-        if($user || password_verify($password, $user['password'])){
-            if((isset($user['is_2fa_enabled'])) && $user['is_2fa_enabled'] == 1){
-                
-            }
+
+        if (isset($user['is_2fa_enabled']) && $user['is_2fa_enabled'] == 1) {
+            
+            $otp = sprintf("%06d", mt_rand(1, 999999));
+            $expiresAt = strtotime('+15 minutes');
+            $userModel->createOtp($user['email'], $otp, $expiresAt);
+            MailService::sendOtpEmail($user['email'], $otp, $user['username']);
+
+            $_SESSION['pending_2fa_user'] = $user['id'];
+            $_SESSION['pending_2fa_email'] = $user['email'];
+            $_SESSION['pending_2fa_username'] = $user['username'];
+            $_SESSION['success'] = 'Mot ma OTP da duoc gui den email cua ban cho xac thuc 2-buoc.';
+            
+            $this->redirect($this->url('/login/2fa'));
         }
+
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['user_name'] = $user['username'];
         $_SESSION['success'] = 'Dang nhap thanh cong.';
 
         $this->redirect($this->url('/dashboard'));
+    }
+
+    public function show2fa(): void
+    {
+        if (isset($_SESSION['pending_2fa_user'])) {
+        $this->view('auth/2fa', [
+            'error' => $_SESSION['error'] ?? null,
+            'success' => $_SESSION['success'] ?? null,
+        ]);
+
+        unset($_SESSION['error'], $_SESSION['success']);
+        } else {
+            $this->redirect($this->url('/login'));
+        }
+    }
+
+    public function verify2fa(): void
+    {
+        if (isset($_SESSION['pending_2fa_user'])) {
+
+        $otpInput = trim($_POST['otp'] ?? '');
+
+        if ($otpInput === '') {
+            $_SESSION['error'] = 'Vui long nhap ma OTP.';
+            $this->redirect($this->url('/login/2fa'));
+        }
+
+        $userModel = new User();
+        $email = $_SESSION['pending_2fa_email'];
+
+        if ($userModel->verifyOtp($email, $otpInput)) {
+            session_regenerate_id(true);
+            $_SESSION['user_id'] = $_SESSION['pending_2fa_user'];
+            $_SESSION['user_name'] = $_SESSION['pending_2fa_username'];
+            
+            unset($_SESSION['pending_2fa_user'], $_SESSION['pending_2fa_email'], $_SESSION['pending_2fa_username']);
+
+            $_SESSION['success'] = 'Dang nhap thanh cong.';
+            $this->redirect($this->url('/dashboard'));
+        } else {
+            $_SESSION['error'] = 'Ma OTP khong dung hoac da het han.';
+            $this->redirect($this->url('/login/2fa'));
+        }
+        } else {
+            $this->redirect($this->url('/login'));
+        }
     }
 
     public function signup(): void
@@ -140,10 +197,10 @@ class AuthController extends Controller
             }
 
             if ($userModel->verifyOtp($email, $otpInput)) {
-                // Xác thực thành công -> MỞ SESSION CHO PHÉP ĐỔI MẬT KHẨU
+                
                 $_SESSION['reset_email'] = $email;
                 $_SESSION['success'] = 'Xac thuc thanh cong. Vui long dat lai mat khau.';
-                $this->redirect($this->url('/reset-password')); // Cần trỏ tới route của UserController
+                $this->redirect($this->url('/reset-password')); 
             } else {
                 $_SESSION['error'] = 'Ma OTP khong dung hoac da het han.';
                 $this->redirect($this->url('/forgot-password'));
