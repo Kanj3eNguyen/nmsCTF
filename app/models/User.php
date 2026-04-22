@@ -14,6 +14,59 @@ class User extends Model
         $user = $stmt->fetch();
         return $user ?: null;
     }
+//rate limit
+    public function incrementLoginAttempts(int $userId): void
+    {
+        $stmt = $this->db->prepare('UPDATE users SET login_attempts = COALESCE(login_attempts, 0) + 1 WHERE id = :id');
+        $stmt->execute(['id' => $userId]);
+    }
+
+    public function resetLoginAttempts(int $userId): void
+    {
+        $stmt = $this->db->prepare('UPDATE users SET login_attempts = 0, lockout_until = NULL WHERE id = :id');
+        $stmt->execute(['id' => $userId]);
+    }
+
+    public function setLockout(int $userId, int $minutes ): void
+    {
+        $stmt = $this->db->prepare('UPDATE users SET lockout_until = DATE_ADD(NOW(), INTERVAL :minutes MINUTE) WHERE id = :id');
+        $stmt->execute(['id' => $userId, 'minutes' => $minutes]);
+    }
+
+    public function getIpData(string $ip): ?array
+    {
+        $stmt = $this->db->prepare('SELECT * FROM locked_ips WHERE ip_address = :ip LIMIT 1');
+        $stmt->execute(['ip' => $ip]);
+        
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    public function incrementIpAttempts(string $ip): void
+    {
+        $stmt = $this->db->prepare('
+            INSERT INTO locked_ips (ip_address, attempts) 
+            VALUES (:ip, 1)
+            ON DUPLICATE KEY UPDATE attempts = attempts + 1
+        ');
+        $stmt->execute(['ip' => $ip]);
+    }
+
+    public function resetIpAttempts(string $ip): void
+    {
+        $stmt = $this->db->prepare('DELETE FROM locked_ips WHERE ip_address = :ip');
+        $stmt->execute(['ip' => $ip]);
+    }
+
+    public function setIpLockout(string $ip, int $minutes = 15): void
+    {
+        $stmt = $this->db->prepare('
+            INSERT INTO locked_ips (ip_address, attempts, lockout_until) 
+            VALUES (:ip, 5, DATE_ADD(NOW(), INTERVAL :minutes MINUTE))
+            ON DUPLICATE KEY UPDATE lockout_until = DATE_ADD(NOW(), INTERVAL :minutes MINUTE)
+        ');
+        $stmt->execute(['ip' => $ip, 'minutes' => $minutes]);
+    }
 
     public function createAccount(array $data): bool
     {

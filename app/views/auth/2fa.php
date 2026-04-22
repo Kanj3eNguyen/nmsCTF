@@ -75,6 +75,12 @@
                     <span class="btn-text">Verify & Login</span>
                 </button>
             </form>
+
+            <form method="POST" action="<?= htmlspecialchars($basePath . '/login/2fa/resend', ENT_QUOTES, 'UTF-8') ?>" style="margin-top: 12px;">
+                <button type="submit" class="submit-btn" style="background: #4a5568;">
+                    <span class="btn-text">Resend OTP</span>
+                </button>
+            </form>
         </div>
     </div>
     

@@ -15,6 +15,7 @@ $router->post('/login', [AuthController::class, 'login']);
 //2FA login
 $router->get('/login/2fa', [AuthController::class, 'show2fa']);
 $router->post('/login/2fa', [AuthController::class, 'verify2fa']);
+$router->post('/login/2fa/resend', [AuthController::class, 'resend2faOtp']);
 
 //forgot
 $router->get('/forgot-password', [AuthController::class, 'showForgotPassword']);

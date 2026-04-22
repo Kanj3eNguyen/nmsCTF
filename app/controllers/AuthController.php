@@ -37,10 +37,53 @@ class AuthController extends Controller
         }
 
         $userModel = new User();
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        
+        $ipData = $userModel->getIpData($ipAddress);
+        if ($ipData && !empty($ipData['lockout_until'])) {
+            if (strtotime($ipData['lockout_until']) > time()) {
+                $remainingWait = ceil((strtotime($ipData['lockout_until']) - time()) / 60);
+                $_SESSION['error'] = "ban da bi khoa. Vui long thu lai sau {$remainingWait} phut.";
+                $this->redirect($this->url('/login'));
+            } else {
+                
+                $userModel->resetIpAttempts($ipAddress);
+                $ipData = null; 
+            }
+        }
+
         $user = $userModel->findByUsername($username);
 
-        if (!$user || !password_verify($password, $user['password'])) {
-            $_SESSION['error'] = 'Thong tin dang nhap khong dung.';
+        if ($user) {
+            if (!password_verify($password, $user['password'])) {
+                $userModel->incrementIpAttempts($ipAddress);
+                $attempts = ($ipData['attempts'] ?? 0) + 1;
+
+                if ($attempts >= 5) {
+                    $userModel->setIpLockout($ipAddress, 2); // Khóa IP 2 phút
+                    $_SESSION['error'] = 'Ban da nhap sai qua nhieu lan. Ban da bi khoa trong 2 phut.';
+                } else {
+                    $remaining = 5 - $attempts;
+                    $_SESSION['error'] = "Thong tin dang nhap khong dung.";
+                }
+                $this->redirect($this->url('/login'));
+            } else {
+                // Đăng nhập thành công, reset số lần thử trên IP
+                $userModel->resetIpAttempts($ipAddress);
+            }
+        } else {
+            $_SESSION['error'] = "Thong tin dang nhap khong dung.";
+            $userModel->incrementIpAttempts($ipAddress);
+            $attempts = ($ipData['attempts'] ?? 0) + 1;
+
+            if ($attempts >= 5) {
+                $userModel->setIpLockout($ipAddress, 2);
+                $_SESSION['error'] = 'Ban nhap sai qua nhieu, xin vui long thu lai sau';
+            } else {
+                $remaining = 5 - $attempts;
+                
+            }
             $this->redirect($this->url('/login'));
         }
 
@@ -84,33 +127,105 @@ class AuthController extends Controller
     public function verify2fa(): void
     {
         if (isset($_SESSION['pending_2fa_user'])) {
-
+        $userModel = new User();
         $otpInput = trim($_POST['otp'] ?? '');
-
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
+        $ipData = $userModel->getIpData($ipAddress);
         if ($otpInput === '') {
             $_SESSION['error'] = 'Vui long nhap ma OTP.';
             $this->redirect($this->url('/login/2fa'));
         }
-
-        $userModel = new User();
+        if ($ipData && !empty($ipData['lockout_until'])) {
+            if (strtotime($ipData['lockout_until']) > time()) {
+                $remainingWait = ceil((strtotime($ipData['lockout_until']) - time()) / 60);
+                $_SESSION['error'] = "ban da bi khoa. Vui long thu lai sau {$remainingWait} phut.";
+                $this->redirect($this->url('/login'));
+            } else {
+                
+                $userModel->resetIpAttempts($ipAddress);
+                $ipData = null; 
+            }
+        }
+        
+        
         $email = $_SESSION['pending_2fa_email'];
 
         if ($userModel->verifyOtp($email, $otpInput)) {
+            $userModel->resetIpAttempts($ipAddress);
             session_regenerate_id(true);
             $_SESSION['user_id'] = $_SESSION['pending_2fa_user'];
             $_SESSION['user_name'] = $_SESSION['pending_2fa_username'];
             
-            unset($_SESSION['pending_2fa_user'], $_SESSION['pending_2fa_email'], $_SESSION['pending_2fa_username']);
+            unset(
+                $_SESSION['pending_2fa_user'],
+                $_SESSION['pending_2fa_email'],
+                $_SESSION['pending_2fa_username']
+            );
 
             $_SESSION['success'] = 'Dang nhap thanh cong.';
             $this->redirect($this->url('/dashboard'));
         } else {
-            $_SESSION['error'] = 'Ma OTP khong dung hoac da het han.';
+            $userModel->incrementIpAttempts($ipAddress);
+            $attempts = ($ipData['attempts'] ?? 0) + 1;
+            if ($attempts >= 5) {
+                    $userModel->setIpLockout($ipAddress, 2); // Khóa IP 2 phút
+                    $_SESSION['error'] = 'Ban da nhap sai qua nhieu lan. Ban da bi khoa trong 2 phut.';
+                } else {
+                    $remaining = 5 - $attempts;
+                    $_SESSION['error'] = "Ma OTP khong dung hoac da het han.";
+                }
             $this->redirect($this->url('/login/2fa'));
         }
         } else {
             $this->redirect($this->url('/login'));
         }
+    }
+
+    public function resend2faOtp(): void
+    {
+        if (!isset($_SESSION['pending_2fa_user'], $_SESSION['pending_2fa_email'], $_SESSION['pending_2fa_username'])) {
+            $this->redirect($this->url('/login'));
+        }
+
+        $userModel = new User();
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
+        $ipData = $userModel->getIpData($ipAddress);
+
+        if ($ipData && !empty($ipData['lockout_until'])) {
+            if (strtotime($ipData['lockout_until']) > time()) {
+                $remainingWait = ceil((strtotime($ipData['lockout_until']) - time()) / 60);
+                $_SESSION['error'] = "Ban da bi khoa thao tac resend OTP. Vui long thu lai sau {$remainingWait} phut.";
+                $this->redirect($this->url('/login/2fa'));
+            } else {
+                $userModel->resetIpAttempts($ipAddress);
+                $ipData = null;
+            }
+        }
+
+        $userModel->incrementIpAttempts($ipAddress);
+        $attempts = ($ipData['attempts'] ?? 0) + 1;
+
+        if ($attempts >= 5) {
+            $userModel->setIpLockout($ipAddress, 2);
+            $_SESSION['error'] = 'Ban da thao tac qua nhieu lan. Ban da bi khoa trong 2 phut.';
+            $this->redirect($this->url('/login/2fa'));
+        }
+
+        $email = $_SESSION['pending_2fa_email'];
+        $username = $_SESSION['pending_2fa_username'];
+
+        $otp = sprintf('%06d', mt_rand(1, 999999));
+        $expiresAt = strtotime('+5 minutes');
+
+        $userModel->createOtp($email, $otp, $expiresAt);
+
+        if (MailService::sendOtpEmail($email, $otp, $username)) {
+            $_SESSION['success'] = 'Da gui lai ma OTP. Vui long kiem tra email cua ban.';
+        } else {
+            $_SESSION['error'] = 'Khong the gui lai OTP luc nay. Vui long thu lai sau.';
+        }
+
+        $this->redirect($this->url('/login/2fa'));
     }
 
     public function signup(): void
@@ -205,6 +320,29 @@ class AuthController extends Controller
                 $_SESSION['error'] = 'Ma OTP khong dung hoac da het han.';
                 $this->redirect($this->url('/forgot-password'));
             }
+        }
+
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? '';
+        $ipData = $userModel->getIpData($ipAddress);
+
+        if ($ipData && !empty($ipData['lockout_until'])) {
+            if (strtotime($ipData['lockout_until']) > time()) {
+                $remainingWait = ceil((strtotime($ipData['lockout_until']) - time()) / 60);
+                $_SESSION['error'] = "Ban da thao tac qua nhieu lan. Vui long thu lai sau {$remainingWait} phut.";
+                $this->redirect($this->url('/forgot-password'));
+            } else {
+                $userModel->resetIpAttempts($ipAddress);
+                $ipData = null;
+            }
+        }
+
+        $userModel->incrementIpAttempts($ipAddress);
+        $attempts = ($ipData['attempts'] ?? 0) + 1;
+
+        if ($attempts >= 5) {
+            $userModel->setIpLockout($ipAddress, 2);
+            $_SESSION['error'] = 'Ban da thao tac qua nhieu lan. Ban da bi khoa trong 2 phut.';
+            $this->redirect($this->url('/forgot-password'));
         }
 
         // Logic send_otp
