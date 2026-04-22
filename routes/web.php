@@ -2,7 +2,9 @@
 
 use App\Core\Router;
 use App\Controllers\AuthController;
+use App\Controllers\AdminController;
 use App\Controllers\DashboardController;
+use App\Controllers\PracticeController;
 use App\Controllers\UserController;
 use App\Models\User;
 
@@ -37,3 +39,10 @@ $router->get('/dashboard', [DashboardController::class, 'showDashboard']);
 //profile
 $router->get('/profile', [UserController::class, 'showProfile']);
 $router->post('/profile/update', [UserController::class, 'updateProfile']);
+//practice
+$router->get('/practice', [PracticeController::class, 'showPractice']);
+$router->post('/practice/submit', [PracticeController::class, 'submitFlag']);
+
+//admin
+$router->get('/admin', [AdminController::class, 'showAdminDashboard']);
+$router->post('/admin/challenges/create', [AdminController::class, 'createChallenge']);

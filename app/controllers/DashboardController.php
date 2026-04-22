@@ -17,7 +17,11 @@ class DashboardController extends Controller
             exit();
         }
 
+        $userModel = new User();
+        $isAdmin = $userModel->isAdmin((int) $_SESSION['user_id']);
+
         $this->view('home/dashboard', [
+            'isAdmin' => $isAdmin,
             'error' => $_SESSION['error'] ?? null,
             'success' => $_SESSION['success'] ?? null,
         ]);

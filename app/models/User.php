@@ -164,4 +164,26 @@ class User extends Model
             'id' => $id,
         ]);
     }
+
+    public function isAdmin(int $id): bool
+    {
+        $user = $this->findById($id);
+        if (!$user) {
+            return false;
+        }
+
+        if (isset($user['is_admin'])) {
+            return (int) $user['is_admin'] === 1;
+        }
+
+        if (isset($user['role'])) {
+            return strtolower((string) $user['role']) === 'admin';
+        }
+
+        if (isset($user['user_type'])) {
+            return strtolower((string) $user['user_type']) === 'admin';
+        }
+
+        return strtolower((string) ($user['username'] ?? '')) === 'admin';
+    }
 }

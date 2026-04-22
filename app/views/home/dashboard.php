@@ -170,14 +170,19 @@
                 Sẵn sàng để chinh phục những thử thách bảo mật?
             </p>
             <div class="dashboard-actions">
-                <button class="btn btn-primary" onclick="window.location.href='<?= htmlspecialchars($basePath . '/challenges', ENT_QUOTES, 'UTF-8') ?>'">
-                    Xem Thử Thách
+                <button class="btn btn-primary" onclick="window.location.href='<?= htmlspecialchars($basePath . '/practice', ENT_QUOTES, 'UTF-8') ?>'">
+                    Practice
                 </button>
+                <?php if (!empty($isAdmin)): ?>
+                    <button class="btn btn-secondary" style="border-color: #f59e0b; color: #f59e0b;" onclick="window.location.href='<?= htmlspecialchars($basePath . '/admin', ENT_QUOTES, 'UTF-8') ?>'">
+                        Admin
+                    </button>
+                <?php endif; ?>
                 <button class="btn btn-secondary" onclick="window.location.href='<?= htmlspecialchars($basePath . '/profile', ENT_QUOTES, 'UTF-8') ?>'">
-                    Hồ Sơ
+                    Profile
                 </button>
                 <button class="btn btn-secondary" style="border-color: #ef4444; color: #ef4444;" onclick="window.location.href='<?= htmlspecialchars($basePath . '/logout', ENT_QUOTES, 'UTF-8') ?>'">
-                    Đăng Xuất
+                    Logout
                 </button>
             </div>
         </div>

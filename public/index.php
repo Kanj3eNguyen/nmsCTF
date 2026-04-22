@@ -28,6 +28,7 @@ require_once '../app/models/User.php';
 require_once '../routes/web.php';
 
 require_once '../app/controllers/DashboardController.php';
-
-
+require_once '../app/controllers/AdminController.php';
+require_once '../app/controllers/PracticeController.php';
+require_once '../app/controllers/UserController.php';
 $router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
