@@ -45,6 +45,11 @@ class UserController extends Controller
             $this->redirect($this->url('/reset-password'));
         }
 
+        if (!preg_match('/^(?=.*\d).{8,}$/', $password)) {
+            $_SESSION['error'] = 'Mat khau phai co it nhat 8 ky tu va chua it nhat 1 chu so.';
+            $this->redirect($this->url('/reset-password'));
+        }
+
         $userModel = new User();
         $user = $userModel->findByEmail($email);
         
@@ -148,6 +153,11 @@ class UserController extends Controller
                 $_SESSION['error'] = 'Mat khau moi va xac nhan mat khau khong khop.';
                 $this->redirect($this->url('/profile'));
             }
+
+            if (!preg_match('/^(?=.*\d).{8,}$/', $newPassword)) {
+                $_SESSION['error'] = 'Mat khau moi phai co it nhat 8 ky tu va chua it nhat 1 chu so.';
+                $this->redirect($this->url('/profile'));
+            }
         }
 
         if ($action === 'send_otp') {
@@ -192,6 +202,7 @@ class UserController extends Controller
             $_SESSION['error'] = 'Ma OTP khong dung hoac da het han.';
             $this->redirect($this->url('/profile'));
         }
+        $userModel->deleteOldTokens($email);
 
         $pendingData = $_SESSION['pending_profile_update'];
         $pendingEmail = trim((string) ($pendingData['email'] ?? ''));

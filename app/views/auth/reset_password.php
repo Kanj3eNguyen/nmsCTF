@@ -62,6 +62,9 @@
                             name="password" 
                             placeholder="Enter new password"
                             required
+                            minlength="8"
+                            pattern="(?=.*\d).{8,}"
+                            title="Password must be at least 8 characters and contain at least 1 number"
                         >
                     </div>
                 </div>
@@ -79,6 +82,7 @@
                             name="confirm_password" 
                             placeholder="Confirm new password"
                             required
+                            minlength="8"
                         >
                     </div>
                 </div>

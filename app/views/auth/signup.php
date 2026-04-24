@@ -84,6 +84,9 @@
                             name="password" 
                             placeholder="Enter your password"
                             required
+                            minlength="8"
+                            pattern="(?=.*\d).{8,}"
+                            title="Password must be at least 8 characters and contain at least 1 number"
                             autocomplete="new-password"
                         >
                         <button type="button" class="toggle-password" id="togglePassword">
@@ -108,6 +111,7 @@
                             name="confirm_password" 
                             placeholder="Confirm your password"
                             required
+                            minlength="8"
                             autocomplete="new-password"
                         >
                         <button type="button" class="toggle-password" id="toggleConfirmPassword">

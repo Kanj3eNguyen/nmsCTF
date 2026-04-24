@@ -152,6 +152,7 @@ class AuthController extends Controller
 
         if ($userModel->verifyOtp($email, $otpInput)) {
             $userModel->resetIpAttempts($ipAddress);
+            $userModel->deleteOldTokens($email);
             session_regenerate_id(true);
             $_SESSION['user_id'] = $_SESSION['pending_2fa_user'];
             $_SESSION['user_name'] = $_SESSION['pending_2fa_username'];
@@ -244,6 +245,11 @@ class AuthController extends Controller
             $_SESSION['error'] = 'Email khong hop le.';
             $this->redirect($this->url('/signup'));
         }
+
+        if (!preg_match('/^(?=.*\d).{8,}$/', $password)) {
+            $_SESSION['error'] = 'Mat khau phai co it nhat 8 ky tu va chua it nhat 1 chu so.';
+            $this->redirect($this->url('/signup'));
+        }
     
         if ($password !== $confirm_password) {
             $_SESSION['error'] = 'Mat khau va xac nhan mat khau khong khop.';
@@ -312,7 +318,7 @@ class AuthController extends Controller
             }
 
             if ($userModel->verifyOtp($email, $otpInput)) {
-                
+                $userModel->deleteOldTokens($email);
                 $_SESSION['reset_email'] = $email;
                 $_SESSION['success'] = 'Xac thuc thanh cong. Vui long dat lai mat khau.';
                 $this->redirect($this->url('/reset-password')); 

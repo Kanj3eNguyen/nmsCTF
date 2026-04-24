@@ -354,7 +354,7 @@
                                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                 </svg>
-                                <input type="password" id="new_password" name="new_password" placeholder="New password">
+                                <input type="password" id="new_password" name="new_password" placeholder="New password" minlength="8" pattern="(?=.*\d).{8,}" title="Password must be at least 8 characters and contain at least 1 number">
                             </div>
                         </div>
 
@@ -365,7 +365,7 @@
                                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                                 </svg>
-                                <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password">
+                                <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password" minlength="8">
                             </div>
                         </div>
 
